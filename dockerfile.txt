@@ -1,0 +1,289 @@
+# Инструкция задает базовый образ 
+# Все последующие команды выполняются поверх 
+# операционной системы Ubuntu версии 22.04
+# Данный образ необходимо предварительно
+# "подпулить" из докер хаба
+FROM ubuntu:22.04
+
+# Устанавливаем переменные для неинтерактивного режима
+# Переменная окружения ENV DEBIAN_FRONTEND=noninteractive 
+# используется в Dockerfile для автоматической установки 
+# или обновления пакетов в Ubuntu, предотвращая возникновение 
+# интерактивных диалогов с пользователем и предоставляя 
+# ответы по умолчанию. Это позволяет развертывать контейнеры 
+# без ручного вмешательства, что подходит 
+# для автоматизированных сборок и развертываний. 
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Данная команда устанавливает интерпретатор по умолчанию 
+# для всех последующих команд RUN в Dockerfile
+SHELL ["/bin/bash", "-c"]
+
+# Инструкции ARG объявляют переменные для использования
+# во время сборки Docker-образа
+# Объявленные аргументы обычно применяются в последующих командах Dockerfile. 
+# Например, чтобы создать пользователя и группу с заданными идентификаторами
+# Имя пользователя, которого нужно создать внутри контейнера
+ARG USER_NAME
+# Пароль для этого пользователя
+# ARG USER_PASSWORD
+# UID (User ID) для пользователя
+# Использование UID помогает согласовать права доступа к файлам 
+# между хост-машиной и контейнером.
+ARG USER_ID
+# GID (Group ID) для основной группы пользователя
+ARG USER_GID
+# Объявляем версию ROS
+ARG ROS_DISTRO=humble
+# ENV - это runtime переменная
+# Она доступна внутри контейнера во время выполнения
+ENV USER=$USER_NAME
+
+
+#################################################################################################
+### -------------------------------------    GENERIC    ------------------------------------- ###
+#################################################################################################
+
+
+# Install generic packages
+# apt update && \              # Обновляем список пакетов
+# apt install -y \             # Установка без подтверждения
+# --no-install-recommends \    # Не устанавливать рекомендованные пакеты
+RUN apt update && apt install -y --no-install-recommends \
+        # Поддержка языков и кодировок (UTF-8 для ROS 2)
+        locales \
+        # Криптография для проверки репозиториев
+        gpg \
+        # Загрузка файлов из интернета
+        wget \
+        # Управление PPA репозиториями
+        software-properties-common \
+        # Просмотр файлов с прокруткой
+        less \
+        # система контроля версий
+        git \
+        # базовые инструменты компиляции (gcc, make, и т.д.)
+        build-essential \
+        # отладчик для C/C++
+        gdb \
+        # компиляторы
+        gcc-12 g++-12 \
+        # система сборки
+        cmake \
+        # текстовые редакторы
+        nano \
+        vim \ 
+        # Менеждер терминалов
+        tmux \
+        # для работы с архивами
+        zip unzip \
+        # выполнение команд с привилегиями
+        sudo \
+        # загрузка файлов из интернета
+        curl \
+        # Линуксовый "дистпечер задач"
+        htop \
+        # управление ключами серверов
+        dirmngr \
+        # кэширование GPG-ключей
+        gpg-agent \
+        # создание deb-пакетов
+        checkinstall \
+        # поиск библиотек для компиляции
+        pkg-config \
+        # информация о версии ОС
+        lsb-release \
+        # синхронизация файлов
+        rsync \
+        # база данных SQLite
+        libsqlite3-dev \
+        # клиент PostgreSQL
+        libpq-dev \
+        # информация о PCI устройствах (GPU, сетевые карты)
+        pciutils \
+        # сетевые утилиты
+        iproute2 iputils-ping \
+        # математика, линейная алгебра
+        libeigen3-dev \
+        # Тоже плюсовый компилятор
+        libboost-all-dev \
+        # DDS и сетевая коммуникация
+        openjdk-8-jdk libssl-dev \
+    # Очистка кэша для уменьшение размера образа    
+    && apt clean && rm -rf /var/lib/apt/lists/* \
+    # настройка UTF-8 для работы ROS 2
+    && locale-gen en_US en_US.UTF-8 \
+    # установка английского языка как стандартного
+    && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+
+# Python
+RUN apt update && apt install -y --no-install-recommends \
+        # заголовочные файлы Python и библиотеки для компиляции расширений
+        python3-dev \
+        # инструменты для сборки и установки Python пакетов
+        python3-setuptools \ 
+        # менеджер пакетов
+        python3-pip \
+        # парсинг TOML файлов
+        python3-toml \
+        # система шаблонов для генерации кода и конфигураций
+        python3-jinja2 \
+        # математика, линейная алгебра
+        python3-numpy \
+        # для создания привязок между кодом на C++ и Python
+        python3-pybind11 \
+    && apt clean && rm -rf /var/lib/apt/lists/*
+
+
+# # #############################################################################################
+# # ### ------------------------------------   GAZEBO   ------------------------------------- ###
+# # #############################################################################################
+
+
+# Gazebo
+RUN apt-get update && apt-get install -y \
+    # Основной пакет Gazebo симулятора
+    gazebo \
+    # Библиотеки разработки для Gazebo
+    libgazebo-dev \
+    && apt clean && rm -rf /var/lib/apt/lists/*
+
+
+# # #############################################################################################
+# # ### -------------------------------------    ROS    ------------------------------------- ###
+# # #############################################################################################
+
+
+# установка Fast-DDS-Gen
+RUN cd /tmp && git clone --recursive https://github.com/eProsima/Fast-DDS-Gen.git -b v1.0.4 \
+    && cd Fast-DDS-Gen && ./gradlew assemble && ./gradlew install
+
+# Установка ROS
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(source /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null \
+    && apt update && apt install -y --no-install-recommends \
+        # базоый ROS   
+        ros-${ROS_DISTRO}-ros-base \
+        # инструмент для записи и воспроизведения данных в ROS
+        ros-${ROS_DISTRO}-ros2bag \
+        # инструмент для управления зависимостями в ROS
+        python3-rosdep \
+        # система сборки (билда) ROS
+        python3-colcon-common-extensions \
+        # управление репозиториями
+        python3-vcstool \
+    && apt clean && rm -rf /var/lib/apt/lists/* \
+    # генератор Python кода для ROS сообщений и сервисов
+    && pip3 install pyros-genmsg \
+        # парсер Kconfig файлов для системы конфигурации
+        kconfiglib \
+        # валидация JSON схем для конфигурационных файлов
+        # используется в launch файлах
+        jsonschema \
+        # совместимость Python 2/3
+        future
+
+# Инициализируем rosdep
+RUN rosdep init && rosdep update --rosdistro ${ROS_DISTRO}
+
+# Установка ros_gz_bridge
+RUN apt update && apt install -y --no-install-recommends \
+    ros-${ROS_DISTRO}-ros-gz-bridge \
+    ros-${ROS_DISTRO}-ros-gz-sim \
+    ros-${ROS_DISTRO}-rviz2 \
+    ros-${ROS_DISTRO}-robot-state-publisher \
+    ros-${ROS_DISTRO}-xacro \
+    && apt clean && rm -rf /var/lib/apt/lists/*
+
+# Установка пакетов Gazebo ROS (добавлено)
+RUN apt update && apt install -y --no-install-recommends \
+    ros-${ROS_DISTRO}-gazebo-ros-pkgs \
+    ros-${ROS_DISTRO}-gazebo-ros2-control \
+    ros-${ROS_DISTRO}-gazebo-plugins \
+    && apt clean && rm -rf /var/lib/apt/lists/*
+
+# Установка дополнительных Python пакетов
+RUN pip3 install --user \
+    numpy-quaternion \
+    pyyaml
+
+# # #############################################################################################
+# # ### -------------------------------------   OTHER   ------------------------------------- ###
+# # #############################################################################################
+
+# установка Jupyter компонентов 
+# для интерактивной работы c ноутбуками
+RUN pip3 install ipykernel ipywidgets
+# конвертация координат между UTM и широтой/долготой
+RUN pip3 install utm \
+    # 3D трансформации и квантернионы - математика для робототехники
+    transforms3d \
+    # ML
+    scikit-learn \
+    # Визуализация
+    plotly matplotlib \
+    # для Jupyter ноутбуков
+    nbformat \
+    # управление переменными окружения для конфигурации
+    python-dotenv \
+    # анализ и обработка табличных данных
+    pandas \
+    # Подключение к PostgreSQL
+    psycopg2
+
+# # #############################################################################################
+# # ### ----------------------------------   CREATE USER   ---------------------------------- ###
+# # #############################################################################################
+
+# Настройка пользователя и прав доступа
+# создает группу ros с фиксированным GID 60000
+# обеспечивает согласованные права доступа между 
+# контейнером и хостом
+RUN groupadd -g 60000 ros \
+    # разрешает нестандартные имена пользователей
+    && adduser --force-badname \ 
+    # отключает пароль
+    --disabled-password \ 
+    # пропускает дополнительную информацию о пользователе
+    --gecos '' \
+    # устанавливает Zsh как shell по умолчанию (вместо bash)
+    --shell /bin/zsh ${USER} \ 
+    # разрешаем пользователям группы sudo выполнять команды без пароля
+	&& echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \ 
+    # права администратора
+	&& adduser ${USER} sudo \
+    # доступы
+	&& adduser ${USER} audio \ 
+	&& adduser ${USER} video \
+    && adduser ${USER} dialout \
+    && adduser ${USER} ros \
+    # изменяем владельца директории /opt/ на нового пользователя
+    # по умолчанию ROS устанавливается в /opt/ros
+    && chown -R ${USER}:${USER} /opt/
+
+# Переключаем текущего пользователя с root на ${USER}
+USER ${USER}
+# Устанавливает рабочую директорию по умолчанию
+WORKDIR /home/${USER}
+
+# ZSH && oh-my-zsh
+RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
+        zsh neofetch \
+    && sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/* \
+    && wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true \
+    && git clone https://github.com/zsh-users/zsh-syntax-highlighting ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting --depth=1 \
+    && git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions --depth=1 \
+    && git clone https://github.com/zsh-users/zsh-completions ~/.oh-my-zsh/custom/plugins/zsh-completions --depth=1 \
+    && git clone https://github.com/spaceship-prompt/spaceship-prompt.git ~/.oh-my-zsh/custom/themes/spaceship-prompt --depth=1 \
+    && ln -s ~/.oh-my-zsh/custom/themes/spaceship-prompt/spaceship.zsh-theme ~/.oh-my-zsh/custom/themes/spaceship.zsh-theme
+
+# конфигурация Tmux
+RUN git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+COPY assets/tmux.conf .tmux.conf
+RUN ~/.tmux/plugins/tpm/scripts/install_plugins.sh
+
+# ZSH config
+COPY assets/zshrc .zshrc
+
+# Определяет команду, которая всегда выполняется при запуске контейнера
+ENTRYPOINT [ "/bin/zsh" ]
