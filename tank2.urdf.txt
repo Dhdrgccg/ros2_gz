@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot name="Tank">
+<robot name="Tank" xmlns:xacro="http://ros.org/wiki/xacro">
   
   <material name="green">
     <color rgba="0.1 0.8 0.1 1.0"/>
@@ -33,7 +33,7 @@
     </inertial>
   </link>
 
-  <!-- ПРАВЫЕ колеса (оба) -->
+  <!-- ПРАВЫЕ колеса -->
   <link name="right_front_wheel">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -90,7 +90,7 @@
     <axis xyz="0 1 0"/>
   </joint>
 
-  <!-- ЛЕВЫЕ колеса (оба) -->
+  <!-- ЛЕВЫЕ колеса -->
   <link name="left_front_wheel">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
@@ -147,7 +147,8 @@
     <axis xyz="0 1 0"/>
   </joint>
 
- <link name="manipulator_base">
+  <!-- МАНИПУЛЯТОР -->
+  <link name="manipulator_base">
     <visual>
       <geometry>
         <cylinder length="0.1" radius="0.08"/>
@@ -307,6 +308,7 @@
     <limit lower="-0.02" upper="0.02" effort="5.0" velocity="0.5"/>
   </joint>
 
+  <!-- СЕНСОРНАЯ ГОЛОВА -->
   <link name="sensor_head_base">
     <visual>
       <geometry>
@@ -361,17 +363,16 @@
     <limit lower="-1.57" upper="1.57" effort="5.0" velocity="2.0"/>
   </joint>
 
-
+  <!-- ROS2 ПЛАГИНЫ -->
   <gazebo>
-    <!-- Основной плагин дифференциального привода для 4 колес -->
+    <!-- Дифференциальный привод для ROS2 -->
     <plugin filename="libgazebo_ros_diff_drive.so" name="diff_drive">
+      <!-- Для ROS2 нужно использовать правильный namespace -->
       <ros>
-        <!-- Если используете ROS2, уберите namespace или настройте правильно -->
-        <!-- <namespace>/tank</namespace> -->
-        <remapping>cmd_vel:=cmd_vel</remapping>
+        <namespace>/</namespace>  <!-- корневой namespace -->
       </ros>
       <update_rate>30</update_rate>
-      <!-- Используем ВСЕ 4 колеса для лучшей стабильности -->
+      <!-- Используем ВСЕ 4 колеса -->
       <left_joint>left_front_wheel_joint</left_joint>
       <left_joint>left_rear_wheel_joint</left_joint>
       <right_joint>right_front_wheel_joint</right_joint>
@@ -380,7 +381,7 @@
       <wheel_diameter>0.3</wheel_diameter>
       <max_wheel_torque>20</max_wheel_torque>
       <max_wheel_acceleration>5.0</max_wheel_acceleration>
-      <command_topic>cmd_vel</command_topic> <!-- Топик без namespace -->
+      <command_topic>cmd_vel</command_topic>
       <odometry_topic>odom</odometry_topic>
       <odometry_frame>odom</odometry_frame>
       <robot_base_frame>base_link</robot_base_frame>
@@ -390,11 +391,10 @@
       <odometry_source>world</odometry_source>
     </plugin>
     
-    <!-- Публикатор состояний суставов -->
+    <!-- Публикатор состояний суставов для ROS2 -->
     <plugin filename="libgazebo_ros_joint_state_publisher.so" name="joint_state_publisher">
       <ros>
-        <!-- Если используете ROS2, уберите namespace -->
-        <!-- <namespace>/tank</namespace> -->
+        <namespace>/</namespace>
       </ros>
       <update_rate>30</update_rate>
       <joint_name>manipulator_base_joint</joint_name>
@@ -409,8 +409,6 @@
       <joint_name>right_front_wheel_joint</joint_name>
       <joint_name>right_rear_wheel_joint</joint_name>
     </plugin>
-    
-    <!-- Убрал лишние плагины которые могут мешать -->
   </gazebo>
   
   <!-- Параметры для колес -->
@@ -452,4 +450,3 @@
   </gazebo>
 
 </robot>
-
