@@ -36,14 +36,14 @@
   <!-- ПРАВЫЕ колеса (оба) -->
   <link name="right_front_wheel">
     <visual>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.1" radius="0.15"/>
       </geometry>
       <material name="black"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.1" radius="0.15"/>
       </geometry>
@@ -58,20 +58,20 @@
   <joint name="right_front_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="right_front_wheel"/>
-    <origin xyz="0.25 0.25 -0.1" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="0.25 0.25 -0.1" rpy="1.57 0 0"/> <!-- ПОВОРОТ НА 90 ГРАДУСОВ -->
+    <axis xyz="0 1 0"/> <!-- Ось вращения теперь Y -->
   </joint>
 
   <link name="right_rear_wheel">
     <visual>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.1" radius="0.15"/>
       </geometry>
       <material name="black"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.1" radius="0.15"/>
       </geometry>
@@ -86,21 +86,21 @@
   <joint name="right_rear_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="right_rear_wheel"/>
-    <origin xyz="-0.25 0.25 -0.1" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="-0.25 0.25 -0.1" rpy="1.57 0 0"/> <!-- ПОВОРОТ НА 90 ГРАДУСОВ -->
+    <axis xyz="0 1 0"/> <!-- Ось вращения теперь Y -->
   </joint>
 
   <!-- ЛЕВЫЕ колеса (оба) -->
   <link name="left_front_wheel">
     <visual>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.1" radius="0.15"/>
       </geometry>
       <material name="black"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.1" radius="0.15"/>
       </geometry>
@@ -115,20 +115,20 @@
   <joint name="left_front_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="left_front_wheel"/>
-    <origin xyz="0.25 -0.25 -0.1" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="0.25 -0.25 -0.1" rpy="1.57 0 0"/> <!-- ПОВОРОТ НА 90 ГРАДУСОВ -->
+    <axis xyz="0 1 0"/> <!-- Ось вращения теперь Y -->
   </joint>
 
   <link name="left_rear_wheel">
     <visual>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.1" radius="0.15"/>
       </geometry>
       <material name="black"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 1.57 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
         <cylinder length="0.1" radius="0.15"/>
       </geometry>
@@ -143,8 +143,8 @@
   <joint name="left_rear_wheel_joint" type="continuous">
     <parent link="base_link"/>
     <child link="left_rear_wheel"/>
-    <origin xyz="-0.25 -0.25 -0.1" rpy="0 0 0"/>
-    <axis xyz="0 0 1"/>
+    <origin xyz="-0.25 -0.25 -0.1" rpy="1.57 0 0"/> <!-- ПОВОРОТ НА 90 ГРАДУСОВ -->
+    <axis xyz="0 1 0"/> <!-- Ось вращения теперь Y -->
   </joint>
 
  <link name="manipulator_base">
@@ -375,8 +375,8 @@
       <right_joint>right_front_wheel_joint</right_joint>
       <wheel_separation>0.5</wheel_separation>
       <wheel_diameter>0.3</wheel_diameter>
-      <max_wheel_torque>10</max_wheel_torque> <!-- Уменьшил с 50 до 10 -->
-      <max_wheel_acceleration>2.0</max_wheel_acceleration> <!-- Уменьшил с 5.0 до 2.0 -->
+      <max_wheel_torque>10</max_wheel_torque>
+      <max_wheel_acceleration>2.0</max_wheel_acceleration>
       <command_topic>cmd_vel</command_topic>
       <odometry_topic>odom</odometry_topic>
       <odometry_frame>odom</odometry_frame>
@@ -426,40 +426,40 @@
     </plugin>
   </gazebo>
   
-  <!-- Параметры для ПРАВЫХ колес - СИЛЬНО УМЕНЬШЕНО ТРЕНИЕ -->
+  <!-- Параметры для ПРАВЫХ колес -->
   <gazebo reference="right_front_wheel">
-    <mu1 value="0.3"/> <!-- было 1.5 -->
-    <mu2 value="0.3"/> <!-- было 1.5 -->
+    <mu1 value="0.3"/>
+    <mu2 value="0.3"/>
     <kp value="1000000.0"/>
-    <kd value="10.0"/> <!-- было 100.0 -->
+    <kd value="10.0"/>
     <fdir1 value="1 0 0"/>
     <material>Gazebo/Black</material>
   </gazebo>
   
   <gazebo reference="right_rear_wheel">
-    <mu1 value="0.3"/> <!-- было 1.5 -->
-    <mu2 value="0.3"/> <!-- было 1.5 -->
+    <mu1 value="0.3"/>
+    <mu2 value="0.3"/>
     <kp value="1000000.0"/>
-    <kd value="10.0"/> <!-- было 100.0 -->
+    <kd value="10.0"/>
     <fdir1 value="1 0 0"/>
     <material>Gazebo/Black</material>
   </gazebo>
   
-  <!-- Параметры для ЛЕВЫХ колес - СИЛЬНО УМЕНЬШЕНО ТРЕНИЕ -->
+  <!-- Параметры для ЛЕВЫХ колес -->
   <gazebo reference="left_front_wheel">
-    <mu1 value="0.3"/> <!-- было 1.5 -->
-    <mu2 value="0.3"/> <!-- было 1.5 -->
+    <mu1 value="0.3"/>
+    <mu2 value="0.3"/>
     <kp value="1000000.0"/>
-    <kd value="10.0"/> <!-- было 100.0 -->
+    <kd value="10.0"/>
     <fdir1 value="1 0 0"/>
     <material>Gazebo/Black</material>
   </gazebo>
   
   <gazebo reference="left_rear_wheel">
-    <mu1 value="0.3"/> <!-- было 1.5 -->
-    <mu2 value="0.3"/> <!-- было 1.5 -->
+    <mu1 value="0.3"/>
+    <mu2 value="0.3"/>
     <kp value="1000000.0"/>
-    <kd value="10.0"/> <!-- было 100.0 -->
+    <kd value="10.0"/>
     <fdir1 value="1 0 0"/>
     <material>Gazebo/Black</material>
   </gazebo>
@@ -470,9 +470,3 @@
   </gazebo>
 
 </robot>
-    <mu1 value="0.0"/>
-    <mu2 value="0.0"/>
-  </gazebo>
-
-</robot>
-
