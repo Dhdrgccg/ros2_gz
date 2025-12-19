@@ -1,0 +1,17 @@
+
+docker build --build-arg USER_NAME=$(whoami) --build-arg USER_ID=$(id -u) --build-arg USER_GID=$(id -g) -f Dockerfile.test -t ros2:1.0 .
+
+docker compose up -d
+
+docker exec -it ros2_docker zsh
+
+gazebo /usr/share/gazebo-11/worlds/empty.world  
+gz model -f /home/user/workdir/my_robot_111.urdf -m my_robot
+
+
+cd ~/ros_ws/                                                
+ros2 pkg create --build-type ament_python my_robot_controller
+
+colcon build --packages-select my_robot_controller  
+
+source /home/user/ros_ws/install/setup.zsh 

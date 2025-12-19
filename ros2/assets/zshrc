@@ -1,0 +1,26 @@
+export HISTSIZE=1000000000
+export SAVEHIST=$HISTSIZE
+setopt EXTENDED_HISTORY
+export SPACESHIP_BATTERY_SHOW=false
+export LANG=en_US.UTF-8
+export LC_CTYPE=en_US.UTF-8
+export TERM=xterm-256color
+
+# Run neofecth (in plain session only, not in tmux)
+[ -z "${TMUX}" ] && neofetch
+
+# oh-my-zsh configuration
+ZSH_THEME="spaceship"
+plugins=(git zsh-syntax-highlighting zsh-autosuggestions zsh-completions)
+autoload -U compinit && compinit
+source ~/.oh-my-zsh/oh-my-zsh.sh
+
+# Funcs
+include () {
+    [[ -f "$1" ]] && source "$1"
+}
+
+# Ros
+source /opt/ros/humble/setup.zsh
+# source /opt/ros/extras/install/setup.zsh
+# include ~/ros_ws/install/setup.zsh
